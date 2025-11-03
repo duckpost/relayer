@@ -45,6 +45,7 @@ export class CCTPService {
         message: cctpMessage,
         attestation: cctpAttestation,
         destinationChainId: providedDestinationChainId,
+        signature,
       } = message;
 
       this.logger.info({
@@ -150,7 +151,7 @@ export class CCTPService {
       }
 
       // Process the mint
-      return await this.processMint(destinationChainId, attestation);
+      return await this.processMint(destinationChainId, attestation, signature);
     } catch (error) {
       this.logger.error({
         at: "CCTPService#processBurnTransaction",
@@ -211,7 +212,11 @@ export class CCTPService {
     }
   }
 
-  private async processMint(chainId: number, attestation: any): Promise<ProcessBurnTransactionResponse> {
+  private async processMint(
+    chainId: number,
+    attestation: any,
+    signature?: string
+  ): Promise<ProcessBurnTransactionResponse> {
     const chainName = PUBLIC_NETWORKS[chainId]?.name || `Chain ${chainId}`;
     this.logger.info({
       at: "CCTPService#processMint",
@@ -237,7 +242,7 @@ export class CCTPService {
       } else {
         const rpcUrl = this.getRpcUrlForChain(chainId);
         const provider = getEvmProvider(rpcUrl);
-        const result = await processMintEvm(chainId, attestation, provider, this.privateKey, this.logger);
+        const result = await processMintEvm(chainId, attestation, provider, this.privateKey, this.logger, signature);
         return {
           success: true,
           mintTxHash: result.txHash,
